@@ -1,0 +1,171 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    color: white;
+    font-family: "Poppins", serif;
+}
+
+:root {
+    --mainBgColor: #16181d;
+    --secondaryBgColor: #202329;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    padding: 2em;
+    width: 100%;
+    height: 100svh;
+    background: var(--mainBgColor);
+}
+
+#searchDiv {
+    width: 100%;
+    background: var(--secondaryBgColor);
+    position: relative;
+}
+
+#searchDivInputs {
+    width: 100%;
+    height: 3em;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+#searchInput {
+    flex:1;
+    height: 100%;
+    width: 80%;
+    padding: 0.75em 1.75em 0.75em 0.75em;
+    font-size: 1.25em;
+    border: 1px solid gray;
+    border-radius: 10px 0 0 10px;
+    background: var(--secondaryBgColor);
+    box-shadow: 0;
+    overflow: hidden;
+}
+
+#searchInput:focus-visible {
+    outline: 0;
+    border: 1px solid #fff;
+}
+
+#searchInputX {
+    position: absolute;
+    right: 3.5em;
+    display: none;
+}
+
+#searchBtn {
+    height: 100%;
+    aspect-ratio: 1;
+    right: 0;
+    background: gray;
+    border: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#searchBtn svg {
+    width: 2.5em;
+    aspect-ratio: 1;
+}
+
+img {
+    transform: scale(0.5);
+}
+
+#suggestions {
+    width: 100%;
+    list-style-type: none;
+    position: absolute;
+    background: var(--secondaryBgColor);
+    border-radius: 0 0 10px 10px;
+    z-index: 10;
+}
+
+#suggestions li {
+    padding: 1em;
+    cursor: pointer;
+}
+
+#suggestions li:hover {
+    background: gray;
+}
+
+main {
+    display: none;
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    /*outline: 1px solid red;*/
+    /*display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1em;*/
+}
+
+#placeAndDateTime {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.25em;
+}
+
+#currentLocalTime {
+    font-size: 2em;
+}
+
+#mainCurrentWeatherInfos {
+    display: flex;
+    /*outline: 1px solid white;*/
+}
+
+#mainCurrentWeatherInfos p {
+    flex: 1;
+    font-size: 3em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /*outline: 1px solid green;*/
+}
+
+#mainCurrentWeatherInfos img {
+    max-width: 50%;
+    /*border: 1px solid gold;*/
+}
+
+img {
+    max-width: 50%;
+}
+
+#secondaryCurrentWeatherInfos {
+    display: flex;
+    background: var(--secondaryBgColor);
+    border-radius: 1em;
+}
+
+#secondaryCurrentWeatherInfos div {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 1em;
+}
+
+#secondaryCurrentWeatherInfos div p:last-of-type {
+    font-style: italic;
+    color: gray;
+    font-size: 0.75em;
+}

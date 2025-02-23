@@ -1,0 +1,243 @@
+$(document).ready(function() {
+    $("#searchBtn").on("click", bindFirstSuggestion)
+    $("#searchInput").on("keyup", detectEnter)
+    $("#searchInput").on("input focus", showSuggestions)
+    $("#searchInput").on("input focus focusout", changeXStatus)
+    $("body").on("click", "#searchInputX", deleteSearchInputText)
+})
+
+const WeatherApp = {
+    localTimeZone: null,
+    lastWeatherData: null
+}
+
+function deleteSearchInputText() {
+    $("#searchInput").val("")
+    $("#searchInputX").hide()
+}
+
+function changeXStatus() {
+    let input = $(this)
+    if(input.val().length) {
+        $("#searchInputX").show()
+        return
+    }
+    $("#searchInputX").hide()
+}
+
+function detectEnter(e) {
+    if(e.key === "Enter" || e.key === 13) {
+        e.preventDefault()
+        $("#searchBtn").click()
+    }
+}
+
+function bindFirstSuggestion() {
+    let firstSuggestion = $("#suggestions").find("li:first")
+    let cityFullName = firstSuggestion.text()
+    let cityId = firstSuggestion.attr("data-cityId")
+    handleSearch(cityFullName, cityId)
+}
+
+function handleSearch(cityFullName, cityId) {
+    deleteSearchInputText()
+    $.ajax({
+        url: "weather_api.php",
+        type: "POST",
+        data: { 
+            cityId: cityId
+        },
+        success: function(response) {
+            response = JSON.parse(response)
+            console.log(response)
+            $("main").show()
+            $("#placeInfos").text(cityFullName)
+            WeatherApp.localTimeZone = response.localTimeZone
+            WeatherApp.lastWeatherData = response.weather
+            let currentLocalTimeStamp = convertISOToLocalTime(new Date().toISOString(), WeatherApp.localTimeZone)
+            $("#currentLocalTime").text(currentLocalTimeStamp.slice(12,17))
+            $("#currentLocalDate").text(currentLocalTimeStamp.slice(0,10))
+            let currentWeather = WeatherApp.lastWeatherData.timelines.hourly[0].values
+            $("#currentTemperature").text(Math.round(currentWeather.temperature) + "°C")
+            $("#currentWindSpeed").text(currentWeather.windSpeed + "KM/H")
+            $("#currentHumidity").text(currentWeather.humidity + "%")
+            $("#currentRainProb").text(currentWeather.precipitationProbability + "%")
+            $("#currentWeatherImg").attr("src", getCurrentWeatherFromCode(currentWeather.weatherCode, currentLocalTimeStamp.slice(12,17)))
+        },
+        error: () => alert("UH OH STINKYYY")
+    })
+    console.log(cityFullName)
+    console.log(cityId)
+}
+
+function showSuggestions() {
+    const input = $("#searchInput").val().trim()
+
+    if(input.length < 2) {
+        $("#suggestions").empty()
+        return
+    }
+
+    $("#suggestions").show()
+
+    /*$.ajax({
+        url: `https://photon.komoot.io/api/?q=${input}&limit=5&osm_tag=place:city&osm_tag=place:town&osm_tag=place:village`,
+        method: "GET",
+        success: function(data) {
+            let cities = [];
+            $("#suggestions").empty()
+
+            data.features.forEach(place => {
+                let type = place.properties.osm_value
+                let city = place.properties["name:it"] || place.properties.name
+                let region = place.properties.state
+                let country = place.properties.country
+                
+                let lat = place.geometry.coordinates[1];
+                let lon = place.geometry.coordinates[0];
+
+                if (["city", "town", "village"].includes(type)) {
+                    // Evita duplicati
+                    if (!cities.some(c => c.city === city && c.region === region && c.country === country)) {
+                        cities.push({city, region, country, lat, lon})// lat, lon });
+                    }
+                }
+            })
+
+            //console.log(cities)
+
+            cities.forEach(city => {
+                //console.log(`${city.city}, ${city.region}, ${city.country}`)
+                let text = city.region ? `${city.city}, ${city.region}, ${city.country}` : `${city.city}, ${city.country}`;
+
+                const listItem = $("<li>")
+                    .text(text)
+                    .attr("data-lat", city.lat)
+                    .attr("data-lon", city.lon)
+                    .click(function() {
+                        //$("#searchInput").val(text)
+                        $("#suggestions").empty()
+
+                        let lat = $(this).attr("data-lat")
+                        let lon = $(this).attr("data-lon")
+                        let cityInfos = $(this).text()
+                        //console.log(`Selezionata: ${lat}, ${lon}`)
+                        handleSearch(cityInfos, lat, lon)
+                    })
+                $("#suggestions").append(listItem)
+                $("#suggestions").show()
+            })
+            //console.log("-------")
+        }
+    })*/
+
+    $.ajax({
+        url: "weather_api.php",
+        method: "POST",
+        data: {
+            userInput : input
+        },
+        success: function(response) {
+            $("#suggestions").empty()
+            response = JSON.parse(response)
+
+            response.items.forEach(place => {
+                const listItem = $("<li>")
+                    .text(place.address.label)
+                    .attr("data-cityId", place.id)
+                    .click(function() {
+                        //$("#searchInput").val(text)
+                        $("#suggestions").empty()
+
+                        let cityId = $(this).attr("data-cityId")
+                        let cityFullName = $(this).text()
+                        handleSearch(cityFullName, cityId)
+                    })
+                $("#suggestions").append(listItem)
+            })
+        },
+        error: () => alert("NACC' U' CUL")
+    })
+
+    
+    $(document).click(function (e) {
+        if (!$(e.target).closest("#startSearchInput, #suggestions").length) {
+            $("#suggestions").hide();
+        }
+    })
+}
+
+function convertISOToLocalTime(isoTimestamp, timeZone) {
+    const date = new Date(isoTimestamp);
+    return new Intl.DateTimeFormat("it-IT", {
+        timeZone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+    }).format(date);
+}
+
+function getCurrentWeatherFromCode(code, time = "07:00") {
+    
+    let weatherIcon = ""
+
+    switch(code) {
+        case 1000 : 
+        case 1100 :
+            if(time >= "06:00" && time < "18:00") {
+                weatherIcon = "media/svg/sunny.svg"
+            } else {
+                weatherIcon = "media/svg/clear_night.svg"
+            }
+            break;
+        case 1101 :
+            if(time >= "06:00" && time < "18:00") {
+                weatherIcon = "media/svg/few_clouds_day.svg"
+            } else {
+                weatherIcon = "media/svg/few_clouds_night.svg"
+            }
+            break;
+        case 1101 :
+        case 1102 :
+        case 1001 :
+            weatherIcon = "media/svg/cloudy.svg" 
+            break;
+        case 2000 :
+        case 2100 :
+            weatherIcon = "media/svg/foggy.svg"
+            break;
+        case 4000 :
+        case 4001 :
+        case 4200 :
+        case 4201 :
+            weatherIcon = "media/svg/rainy.svg"
+            break;
+        case 5000 :
+        case 5001 :
+        case 5100 :
+        case 5101 :
+            weatherIcon = "media/svg/snowy.svg"
+            break;
+        case 6000 :
+        case 6001 :
+        case 6200 :
+        case 6201 :
+            weatherIcon = "media/svg/hail.svg" //freezing rain
+            break;
+        case 7000 :
+        case 7101 :
+        case 7102 :
+            weatherIcon = "media/svg/hail.svg"
+            break;
+        case 8000 :
+            weatherIcon = "media/svg/thunderstorm.svg"
+            break;
+        default :
+            weatherIcon = "media/svg/question-mark.svg"
+    }
+    
+    return weatherIcon
+}
