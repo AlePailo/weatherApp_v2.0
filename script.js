@@ -8,7 +8,8 @@ $(document).ready(function() {
 
 const WeatherApp = {
     localTimeZone: null,
-    lastWeatherData: null
+    lastWeatherData: null,
+    currentLocalTimeStamp: null
 }
 
 function deleteSearchInputText() {
@@ -54,15 +55,19 @@ function handleSearch(cityFullName, cityId) {
             $("#placeInfos").text(cityFullName)
             WeatherApp.localTimeZone = response.localTimeZone
             WeatherApp.lastWeatherData = response.weather
-            let currentLocalTimeStamp = convertISOToLocalTime(new Date().toISOString(), WeatherApp.localTimeZone)
-            $("#currentLocalTime").text(currentLocalTimeStamp.slice(12,17))
-            $("#currentLocalDate").text(currentLocalTimeStamp.slice(0,10))
+            formatISODateTimesToLocal(WeatherApp.lastWeatherData.timelines)
+            WeatherApp.currentLocalTimeStamp = convertISOToLocalTime(new Date().toISOString(), WeatherApp.localTimeZone)
+            $("#currentLocalTime").text(WeatherApp.currentLocalTimeStamp.slice(12,17))
+            $("#currentLocalDate").text(WeatherApp.currentLocalTimeStamp.slice(0,10))
             let currentWeather = WeatherApp.lastWeatherData.timelines.hourly[0].values
             $("#currentTemperature").text(Math.round(currentWeather.temperature) + "°C")
             $("#currentWindSpeed").text(currentWeather.windSpeed + "KM/H")
             $("#currentHumidity").text(currentWeather.humidity + "%")
             $("#currentRainProb").text(currentWeather.precipitationProbability + "%")
-            $("#currentWeatherImg").attr("src", getCurrentWeatherFromCode(currentWeather.weatherCode, currentLocalTimeStamp.slice(12,17)))
+            $("#currentWeatherImg").attr("src", getCurrentWeatherFromCode(currentWeather.weatherCode, WeatherApp.currentLocalTimeStamp.slice(12,17)))
+
+            formatNextDays()
+            //console.log(getHourlyForecastForDay(WeatherApp.lastWeatherData, WeatherApp.currentLocalTimeStamp.slice(0,10)))
         },
         error: () => alert("UH OH STINKYYY")
     })
@@ -168,7 +173,7 @@ function showSuggestions() {
 }
 
 function convertISOToLocalTime(isoTimestamp, timeZone) {
-    const date = new Date(isoTimestamp);
+    const date = new Date(isoTimestamp)
     return new Intl.DateTimeFormat("it-IT", {
         timeZone,
         year: "numeric",
@@ -177,7 +182,7 @@ function convertISOToLocalTime(isoTimestamp, timeZone) {
         hour: "2-digit",
         minute: "2-digit",
         second: "2-digit"
-    }).format(date);
+    }).format(date)
 }
 
 function getCurrentWeatherFromCode(code, time = "07:00") {
@@ -240,4 +245,61 @@ function getCurrentWeatherFromCode(code, time = "07:00") {
     }
     
     return weatherIcon
+}
+
+
+
+
+function formatISODateTimesToLocal(arr) {
+    arr.hourly.forEach(hour => {
+        hour.time = convertISOToLocalTime(hour.time, WeatherApp.localTimeZone)
+    })
+
+    arr.daily.forEach(day => {
+        day.time = convertISOToLocalTime(day.time, WeatherApp.localTimeZone).slice(0,10)
+    })
+}
+
+
+
+function getNextDays() {
+    const next5Days = []
+    const currentDay = WeatherApp.currentLocalTimeStamp.slice(0,10)
+    console.log(currentDay)
+    const days = WeatherApp.lastWeatherData.timelines.daily
+    let count = 0
+    let i = 0
+    let found = false
+    if(days[0].time.includes(currentDay)) i = 0
+    
+    while(count < 5 && i < days.length) {
+        if(!found && !days[i].time.includes(currentDay)) {
+            i++
+            continue
+        }
+        if(!found) found = true
+        next5Days.push(days[i].time.slice(0,10))
+        count++
+        i++
+    }
+
+    return next5Days
+}
+
+function formatNextDays() {
+    const days = getNextDays()
+    days.forEach(day => {
+        /*const dailyWeatherInfos = WeatherApp.lastWeatherData.timelines.daily.times[day]
+        console.log(dailyWeatherInfos)
+        const dayPanel = $("<div/>")
+        const weatherIcon = $("<img>").attr("src", getCurrentWeatherFromCode(dailyWeatherInfos.weatherCode))
+        dayPanel.append(weatherIcon)
+        $("#nextDays").append(dayPanel)*/
+    })
+    WeatherApp.lastWeatherData.timelines.daily
+}
+
+function getHourlyForecastForDay(weatherData, selectedDate) {
+    return weatherData.timelines.hourly
+        .filter(hourlyData => hourlyData.time.startsWith(selectedDate)); // Prende solo gli orari del giorno selezionato
 }
