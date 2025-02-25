@@ -188,12 +188,52 @@ img {
 }
 
 #nextDays div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
     background: var(--secondaryBgColor);
     min-width: 7.5em;
     min-height: 8.5em;
     border-radius: 1em;
 }
 
+#nextDays div span:nth-of-type(2) {
+    color: gray;
+}
+
 section {
     margin-top: 2.5em;
+}
+
+#hourlyInfos {
+    display: none;
+    height: 100svh;
+}
+
+#hourlyInfosOptions {
+    display: flex;
+    justify-content: space-between;
+    align-content: center;
+    margin-bottom: 1em;
+}
+
+#hourlyInfos select{
+    background: var(--secondaryBgColor);
+    padding: 0.5em;
+    border-radius: 0.5em;
+}
+
+#hourlyInfosDiv {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 1em;
+}
+
+#hourlyInfosDiv div {
+    outline: 1px solid #fff;
+    background: var(--secondaryBgColor);
+    border-radius: 20px;
+    width: 100%;
 }

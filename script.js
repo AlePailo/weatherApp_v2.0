@@ -4,6 +4,8 @@ $(document).ready(function() {
     $("#searchInput").on("input focus", showSuggestions)
     $("#searchInput").on("input focus focusout", changeXStatus)
     $("body").on("click", "#searchInputX", deleteSearchInputText)
+    $("body").on("click", "#nextDays div", showHourlyForecastForDay)
+    $("body").on("click", "#backBtn", hideHourlyForecastForDay)
 })
 
 const WeatherApp = {
@@ -270,6 +272,7 @@ function getNextDays() {
     let count = 0
     let i = 0
     let found = false
+
     if(days[0].time.includes(currentDay)) i = 0
     
     while(count < 5 && i < days.length) {
@@ -278,7 +281,9 @@ function getNextDays() {
             continue
         }
         if(!found) found = true
-        next5Days.push(days[i].time.slice(0,10))
+        //next5Days.push(days[i].time.slice(0,10))
+        let day = days[i]
+        next5Days.push([day.time, day.values.weatherCodeMin, Math.round(day.values.temperatureMin), Math.round(day.values.temperatureMax)])
         count++
         i++
     }
@@ -287,19 +292,54 @@ function getNextDays() {
 }
 
 function formatNextDays() {
+    $("#nextDays").empty()
     const days = getNextDays()
-    days.forEach(day => {
-        /*const dailyWeatherInfos = WeatherApp.lastWeatherData.timelines.daily.times[day]
-        console.log(dailyWeatherInfos)
+    //console.log(days)
+    days.forEach((day) => {
+        //console.log(day)
         const dayPanel = $("<div/>")
-        const weatherIcon = $("<img>").attr("src", getCurrentWeatherFromCode(dailyWeatherInfos.weatherCode))
-        dayPanel.append(weatherIcon)
-        $("#nextDays").append(dayPanel)*/
+        const date = $("<p/>").text(formatDateForNextDaysDisplay(day[0]))
+        const weatherIcon = $("<img>").attr("src", getCurrentWeatherFromCode(day[1]))
+        const weatherMaxAndMin = $("<p/>").html(`<span>${day[3]}°</span>  <span>${day[2]}°</span>`)
+        dayPanel.append(date, weatherIcon, weatherMaxAndMin).attr("data-date", day[0])
+        $("#nextDays").append(dayPanel)
     })
-    WeatherApp.lastWeatherData.timelines.daily
+}
+
+function formatDateForNextDaysDisplay(dateStr) {
+    const [day, month, year] = dateStr.split('/')
+    const date = new Date(`${year}-${month}-${day}`)
+
+    // Formatta la data in "Mar 25/02"
+    return new Intl.DateTimeFormat("it-IT", { 
+        weekday: "short"
+    }).format(date) + ` ${dateStr.slice(0,5)}`;
+}
+
+function showHourlyForecastForDay() {
+    $("#searchDiv").hide()
+    $("main").hide()
+    $("#hourlyInfosDiv").empty()
+    $("#hourlyInfos").show()
+    getHourlyForecastForDay(WeatherApp.lastWeatherData, $(this).attr("data-date"))
 }
 
 function getHourlyForecastForDay(weatherData, selectedDate) {
-    return weatherData.timelines.hourly
-        .filter(hourlyData => hourlyData.time.startsWith(selectedDate)); // Prende solo gli orari del giorno selezionato
+    const hourlyInfos = weatherData.timelines.hourly.filter(hourlyData => hourlyData.time.startsWith(selectedDate))
+    hourlyInfos.forEach(hour => {
+        const hourPanel = $("<div/>")
+        const time = $("<p/>").text(hour.time.slice(11,17))
+        const temp = $("<p/>").text(hour.values.temperature + "°C")
+        const windSpeed = $("<p/>").text(hour.values.windSpeed + "KM/H")
+        const humidity = $("<p/>").text(hour.values.humidity + "%")
+        const rainProb = $("<p/>").text(hour.values.precipitationProbability + "%")
+        hourPanel.append(time, temp, windSpeed, humidity, rainProb)
+        $("#hourlyInfosDiv").append(hourPanel)
+    })
+}
+
+function hideHourlyForecastForDay() {
+    $("#searchDiv").hide()
+    $("main").show()
+    $("#hourlyInfos").hide()
 }
