@@ -6,6 +6,7 @@ $(document).ready(function() {
     $("body").on("click", "#searchInputX", deleteSearchInputText)
     $("body").on("click", "#nextDays div", showHourlyForecastForDay)
     $("body").on("click", "#backBtn", hideHourlyForecastForDay)
+    $("select").on("change", changeHourlyProperty)
 })
 
 const WeatherApp = {
@@ -317,29 +318,63 @@ function formatDateForNextDaysDisplay(dateStr) {
 }
 
 function showHourlyForecastForDay() {
+    const selectedDate = $(this).attr("data-date")
     $("#searchDiv").hide()
     $("main").hide()
-    $("#hourlyInfosDiv").empty()
-    $("#hourlyInfos").show()
-    getHourlyForecastForDay(WeatherApp.lastWeatherData, $(this).attr("data-date"))
+    $("#hourlyInfos").attr("data-selectedDate", selectedDate).show()
+    getHourlyForecastForDay(WeatherApp.lastWeatherData, selectedDate, $("select").val())
 }
 
-function getHourlyForecastForDay(weatherData, selectedDate) {
+function getHourlyForecastForDay(weatherData, selectedDate, property) {
+    console.log("Selected date is : " + selectedDate)
+    $("#hourlyInfosDiv").empty()
     const hourlyInfos = weatherData.timelines.hourly.filter(hourlyData => hourlyData.time.startsWith(selectedDate))
     hourlyInfos.forEach(hour => {
-        const hourPanel = $("<div/>")
+        const hourPanel = $("<div/>").addClass("hourDiv")
+        const weatherIcon = $("<img>").attr("src", getCurrentWeatherFromCode(hour.values.weatherCode))
         const time = $("<p/>").text(hour.time.slice(11,17))
+
+        let suffix = ""
+        switch(property) {
+            case "temperature":
+                suffix = "°C"
+                break
+            case "windSpeed":
+                suffix = "KM/H"
+                break
+            case "humidity":
+            case "precipitationProbability":
+                suffix = "%"
+                break
+            default:
+                suffix = "-.-"
+        }
+
+        const selectedProperty = $("<p/>").text(`${hour.values[property]} ${suffix}`)
+        /*
         const temp = $("<p/>").text(hour.values.temperature + "°C")
         const windSpeed = $("<p/>").text(hour.values.windSpeed + "KM/H")
         const humidity = $("<p/>").text(hour.values.humidity + "%")
         const rainProb = $("<p/>").text(hour.values.precipitationProbability + "%")
-        hourPanel.append(time, temp, windSpeed, humidity, rainProb)
+        hourPanel.append(time, temp, windSpeed, humidity, rainProb)*/
+        //hourPanel.append(time, weatherIcon, selectedProperty).addClass("hourDiv")
+
+        Array.from([time, weatherIcon, selectedProperty]).forEach(prop => {
+            const internalDiv = $("<div/>")
+            internalDiv.append(prop)
+            hourPanel.append(internalDiv)
+        })
         $("#hourlyInfosDiv").append(hourPanel)
     })
 }
 
 function hideHourlyForecastForDay() {
-    $("#searchDiv").hide()
+    $("#searchDiv").show()
     $("main").show()
     $("#hourlyInfos").hide()
+}
+
+function changeHourlyProperty() {
+    //console.log($(this).val())
+    getHourlyForecastForDay(WeatherApp.lastWeatherData, $("#hourlyInfos").attr("data-selectedDate"), $("select").val())
 }
