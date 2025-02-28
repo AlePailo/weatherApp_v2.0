@@ -8,6 +8,13 @@
     box-sizing: border-box;
     color: white;
     font-family: "Poppins", serif;
+
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    -ms-user-drag: none;
+    user-drag: none;
 }
 
 :root {
@@ -200,7 +207,13 @@ img {
     min-width: 7.5em;
     min-height: 8.5em;
     border-radius: 1em;
+    /*cursor: pointer;*/
+    /*transition: 0.15s ease all;*/
 }
+
+/*#nextDays div:active {
+    transform: scale(0.75);
+}*/
 
 #nextDays div span:nth-of-type(2) {
     color: gray;
@@ -227,7 +240,24 @@ section:not(#hourlyInfos) {
     background: var(--secondaryBgColor);
     padding: 0.5em;
     border-radius: 0.5em;
+    outline: 0;
 }
+
+#backBtn {
+    width: 1em;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/*#backBtn:active,
+#backBtn:focus-within,
+#backBtn:focus-visible {
+    transform: scale(0.75);
+}*/
+
 
 #hourlyInfosDiv {
     display: flex;

@@ -4,8 +4,20 @@ $(document).ready(function() {
     $("#searchInput").on("input focus", showSuggestions)
     $("#searchInput").on("input focus focusout", changeXStatus)
     $("body").on("click", "#searchInputX", deleteSearchInputText)
-    $("body").on("click", "#nextDays div", showHourlyForecastForDay)
-    $("body").on("click", "#backBtn", hideHourlyForecastForDay)
+    $("body").on("click", "#nextDays div", function() {
+        $(this).css("transform", "scale(0.9)")
+        setTimeout(() => {
+            showHourlyForecastForDay($(this).attr("data-date"))
+            $(this).css("transform", "scale(1)")
+        }, 150)  
+    })
+    $("body").on("click", "#backBtn", function() {
+        $(this).css("transform", "scale(0.75)")
+        setTimeout(() => {
+            hideHourlyForecastForDay()
+            $(this).css("transform", "scale(1)")
+        }, 150)
+    })
     $("select").on("change", changeHourlyProperty)
 })
 
@@ -52,7 +64,6 @@ function handleSearch(cityFullName, cityId) {
             cityId: cityId
         },
         success: function(response) {
-            response = JSON.parse(response)
             console.log(response)
             $("main").show()
             $("#placeInfos").text(cityFullName)
@@ -147,7 +158,6 @@ function showSuggestions() {
         },
         success: function(response) {
             $("#suggestions").empty()
-            response = JSON.parse(response)
 
             response.items.forEach(place => {
                 const listItem = $("<li>")
@@ -265,25 +275,25 @@ function formatISODateTimesToLocal(arr) {
 
 
 
-function getNextDays() {
+function getNextDays(currentDay, coveredDays) {
     const next5Days = []
-    const currentDay = WeatherApp.currentLocalTimeStamp.slice(0,10)
+    //const currentDay = WeatherApp.currentLocalTimeStamp.slice(0,10)
     console.log(currentDay)
-    const days = WeatherApp.lastWeatherData.timelines.daily
+    //const days = WeatherApp.lastWeatherData.timelines.daily
     let count = 0
     let i = 0
     let found = false
 
-    if(days[0].time.includes(currentDay)) i = 0
+    if(coveredDays[0].time.includes(currentDay)) i = 0
     
-    while(count < 5 && i < days.length) {
-        if(!found && !days[i].time.includes(currentDay)) {
+    while(count < 5 && i < coveredDays.length) {
+        if(!found && !coveredDays[i].time.includes(currentDay)) {
             i++
             continue
         }
         if(!found) found = true
         //next5Days.push(days[i].time.slice(0,10))
-        let day = days[i]
+        let day = coveredDays[i]
         next5Days.push([day.time, day.values.weatherCodeMin, Math.round(day.values.temperatureMin), Math.round(day.values.temperatureMax)])
         count++
         i++
@@ -294,7 +304,7 @@ function getNextDays() {
 
 function formatNextDays() {
     $("#nextDays").empty()
-    const days = getNextDays()
+    const days = getNextDays(WeatherApp.currentLocalTimeStamp.slice(0,10), WeatherApp.lastWeatherData.timelines.daily)
     //console.log(days)
     days.forEach((day) => {
         //console.log(day)
@@ -317,8 +327,8 @@ function formatDateForNextDaysDisplay(dateStr) {
     }).format(date) + ` ${dateStr.slice(0,5)}`;
 }
 
-function showHourlyForecastForDay() {
-    const selectedDate = $(this).attr("data-date")
+function showHourlyForecastForDay(selectedDate) {
+    //const selectedDate = $(this).attr("data-date")
     $("#searchDiv").hide()
     $("main").hide()
     $("#hourlyInfos").attr("data-selectedDate", selectedDate).show()
