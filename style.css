@@ -9,6 +9,7 @@
     color: white;
     font-family: "Poppins", serif;
 
+    -webkit-tap-highlight-color: transparent;
     -webkit-user-select: none;
     -ms-user-select: none;
     user-select: none;
@@ -32,6 +33,12 @@ body {
     background: var(--mainBgColor);
 }
 
+.flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 #searchDiv {
     width: 100%;
     background: var(--secondaryBgColor);
@@ -44,8 +51,6 @@ body {
     border-radius: 10px;
     overflow: hidden;
     position: relative;
-    display: flex;
-    align-items: center;
 }
 
 #searchInput {
@@ -78,9 +83,6 @@ body {
     right: 0;
     background: gray;
     border: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 #searchBtn svg {
@@ -118,9 +120,7 @@ main {
 }
 
 #placeAndDateTime {
-    display: flex;
     justify-content: space-between;
-    align-items: center;
     font-size: 1.25em;
 }
 
@@ -130,20 +130,19 @@ main {
 
 #mainCurrentWeatherInfos {
     display: flex;
+    align-items: center;
     margin: 2.5em 0;
-    /*outline: 1px solid white;*/
 }
 
-#mainCurrentWeatherInfos p {
+#currentTemperature {
     width: 50%;
     font-size: 3.5em;
     display: flex;
     justify-content: center;
     align-items: center;
-    /*outline: 1px solid green;*/
 }
 
-#mainCurrentWeatherInfos img {
+#currentWeatherImg {
     max-width: 35%;
     margin: 0 auto;
 }
@@ -211,10 +210,6 @@ img {
     /*transition: 0.15s ease all;*/
 }
 
-/*#nextDays div:active {
-    transform: scale(0.75);
-}*/
-
 #nextDays div span:nth-of-type(2) {
     color: gray;
 }
@@ -251,13 +246,6 @@ section:not(#hourlyInfos) {
     justify-content: center;
     align-items: center;
 }
-
-/*#backBtn:active,
-#backBtn:focus-within,
-#backBtn:focus-visible {
-    transform: scale(0.75);
-}*/
-
 
 #hourlyInfosDiv {
     display: flex;

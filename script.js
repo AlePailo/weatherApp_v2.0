@@ -19,6 +19,12 @@ $(document).ready(function() {
         }, 150)
     })
     $("select").on("change", changeHourlyProperty)
+
+    $(document).click(function (e) {
+        if (!$(e.target).closest("#searchInput, #suggestions").length) {
+            $("#suggestions").hide();
+        }
+    })
 })
 
 const WeatherApp = {
@@ -65,6 +71,7 @@ function handleSearch(cityFullName, cityId) {
         },
         success: function(response) {
             console.log(response)
+            addToLastSearches(cityFullName, cityId)
             $("main").show()
             $("#placeInfos").text(cityFullName)
             WeatherApp.localTimeZone = response.localTimeZone
@@ -82,6 +89,7 @@ function handleSearch(cityFullName, cityId) {
 
             formatNextDays()
             //console.log(getHourlyForecastForDay(WeatherApp.lastWeatherData, WeatherApp.currentLocalTimeStamp.slice(0,10)))
+            $("#searchInput").blur() // FORSE MEGLIO PRIMA DI AJAX CALL
         },
         error: () => alert("UH OH STINKYYY")
     })
@@ -91,13 +99,13 @@ function handleSearch(cityFullName, cityId) {
 
 function showSuggestions() {
     const input = $("#searchInput").val().trim()
+    $("#suggestions").show()
 
-    if(input.length < 2) {
+    if(input.length < 1) {
         $("#suggestions").empty()
+        showHistory()
         return
     }
-
-    $("#suggestions").show()
 
     /*$.ajax({
         url: `https://photon.komoot.io/api/?q=${input}&limit=5&osm_tag=place:city&osm_tag=place:town&osm_tag=place:village`,
@@ -176,13 +184,6 @@ function showSuggestions() {
         },
         error: () => alert("NACC' U' CUL")
     })
-
-    
-    $(document).click(function (e) {
-        if (!$(e.target).closest("#startSearchInput, #suggestions").length) {
-            $("#suggestions").hide();
-        }
-    })
 }
 
 function convertISOToLocalTime(isoTimestamp, timeZone) {
@@ -218,7 +219,7 @@ function getCurrentWeatherFromCode(code, time = "07:00") {
                 weatherIcon = "media/svg/few_clouds_night.svg"
             }
             break;
-        case 1101 :
+        //case 1101 :
         case 1102 :
         case 1001 :
             weatherIcon = "media/svg/cloudy.svg" 
@@ -305,14 +306,17 @@ function getNextDays(currentDay, coveredDays) {
 function formatNextDays() {
     $("#nextDays").empty()
     const days = getNextDays(WeatherApp.currentLocalTimeStamp.slice(0,10), WeatherApp.lastWeatherData.timelines.daily)
-    //console.log(days)
-    days.forEach((day) => {
+    console.log(days)
+    days.forEach((day, i) => {
         //console.log(day)
         const dayPanel = $("<div/>")
-        const date = $("<p/>").text(formatDateForNextDaysDisplay(day[0]))
+        let date = formatDateForNextDaysDisplay(day[0])
+        if(i === 0) date = "Oggi"
+        if(i === 1) date = "Domani"
+        const dateText = $("<p/>").text(date)
         const weatherIcon = $("<img>").attr("src", getCurrentWeatherFromCode(day[1]))
         const weatherMaxAndMin = $("<p/>").html(`<span>${day[3]}°</span>  <span>${day[2]}°</span>`)
-        dayPanel.append(date, weatherIcon, weatherMaxAndMin).attr("data-date", day[0])
+        dayPanel.append(dateText, weatherIcon, weatherMaxAndMin).attr("data-date", day[0])
         $("#nextDays").append(dayPanel)
     })
 }
@@ -341,12 +345,14 @@ function getHourlyForecastForDay(weatherData, selectedDate, property) {
     const hourlyInfos = weatherData.timelines.hourly.filter(hourlyData => hourlyData.time.startsWith(selectedDate))
     hourlyInfos.forEach(hour => {
         const hourPanel = $("<div/>").addClass("hourDiv")
-        const weatherIcon = $("<img>").attr("src", getCurrentWeatherFromCode(hour.values.weatherCode))
-        const time = $("<p/>").text(hour.time.slice(11,17))
+        const weatherIcon = $("<img>").attr("src", getCurrentWeatherFromCode(hour.values.weatherCode, hour.time.slice(12,17)))
+        const time = $("<p/>").text(hour.time.slice(12,17))
 
+        let propertyVal = hour.values[property]
         let suffix = ""
         switch(property) {
             case "temperature":
+                propertyVal = Math.round(propertyVal)
                 suffix = "°C"
                 break
             case "windSpeed":
@@ -360,7 +366,7 @@ function getHourlyForecastForDay(weatherData, selectedDate, property) {
                 suffix = "-.-"
         }
 
-        const selectedProperty = $("<p/>").text(`${hour.values[property]} ${suffix}`)
+        const selectedProperty = $("<p/>").text(`${propertyVal} ${suffix}`)
         /*
         const temp = $("<p/>").text(hour.values.temperature + "°C")
         const windSpeed = $("<p/>").text(hour.values.windSpeed + "KM/H")
@@ -387,4 +393,84 @@ function hideHourlyForecastForDay() {
 function changeHourlyProperty() {
     //console.log($(this).val())
     getHourlyForecastForDay(WeatherApp.lastWeatherData, $("#hourlyInfos").attr("data-selectedDate"), $("select").val())
+}
+
+
+function showHistory() {
+    const lastSearches = Max5ElementsUniqueQueue.loadFromLocalStorage()
+    lastSearches.getHistory().forEach(city => {
+        const listItem = $("<li>")
+            .text(city.name)
+            .attr("data-cityId", city.id)
+            .click(function() {
+                $("#suggestions").empty()
+
+                let cityId = $(this).attr("data-cityId")
+                let cityFullName = $(this).text()
+                handleSearch(cityFullName, cityId)
+            })
+        $("#suggestions").append(listItem)
+    })
+    console.log(lastSearches)
+    //lastSearches.items.reverse().forEach(city => console.log(city))
+}
+
+function addToLastSearches(city, cityId) {
+    /*let lastSearches = JSON.parse(localStorage.getItem('lastSearches'))
+    if(!lastSearches) {
+        lastSearches = []
+    }
+    console.log(typeof lastSearches, lastSearches)
+    lastSearches.push([city])
+    localStorage.setItem('lastSearches', JSON.stringify(lastSearches))*/
+    
+    //localStorage.removeItem("lastSearches")
+
+    const lastSearches = Max5ElementsUniqueQueue.loadFromLocalStorage()
+    lastSearches.enqueue({id: cityId, name: city})
+}
+
+class Max5ElementsUniqueQueue {
+    constructor() {
+        this.items = []
+    }
+
+    enqueue(newItem) {
+        const pos = this.items.findIndex(item => item.id === newItem.id)
+        if (pos !== -1) {
+            this.items.splice(pos, 1)
+        }
+        if (this.items.length === 5) {
+            this.dequeue()
+        }
+        this.items.push(newItem);
+        this.saveToLocalStorage()
+    }
+
+    dequeue() {
+        if (!this.isEmpty()) this.items.shift()
+    }
+
+    size() {
+        return this.items.length
+    }
+
+    isEmpty() {
+        return this.items.length === 0
+    }
+
+    getHistory() {
+        return [...this.items].reverse()
+    }
+
+    saveToLocalStorage() {
+        localStorage.setItem("lastSearches", JSON.stringify(this.items))
+    }
+
+    static loadFromLocalStorage() {
+        const data = JSON.parse(localStorage.getItem("lastSearches")) || []
+        const instance = new Max5ElementsUniqueQueue()
+        instance.items = data
+        return instance
+    }
 }
