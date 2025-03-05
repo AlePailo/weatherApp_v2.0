@@ -100,6 +100,9 @@ body {
 }
 
 #suggestions li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     padding: 1em;
     cursor: pointer;
 }
@@ -107,6 +110,42 @@ body {
 #suggestions li:hover {
     background: gray;
 }
+
+#suggestions li:hover:has(.icon-right:hover) {
+    background: transparent;
+}
+
+.icon-left,
+.icon-right {
+    font-size: 1.2em; /* Regola la dimensione delle icone */
+    display: flex;
+    align-items: center;
+}
+
+.icon-left {
+    justify-content: flex-start;
+}
+
+.icon-right {
+    justify-content: flex-end;
+}
+
+.icon-left img {
+    width: 2em;
+    aspect-ratio: 1;
+}
+
+.icon-right img {
+    width: 2em;
+    aspect-ratio: 1;
+}
+
+.city-name {
+    flex-grow: 1; /* Fa in modo che il nome della città si espanda */
+    text-align: left;
+}
+
+
 
 main {
     display: none;
@@ -129,17 +168,12 @@ main {
 }
 
 #mainCurrentWeatherInfos {
-    display: flex;
-    align-items: center;
     margin: 2.5em 0;
 }
 
 #currentTemperature {
     width: 50%;
     font-size: 3.5em;
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
 
 #currentWeatherImg {
@@ -155,7 +189,7 @@ img {
 }
 
 #secondaryCurrentWeatherInfos {
-    display: flex;
+    /*display: flex;*/
     background: var(--secondaryBgColor);
     border-radius: 1em;
 }
@@ -166,10 +200,7 @@ img {
 
 #secondaryCurrentWeatherInfos div {
     flex: 1;
-    display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
     padding: 1em;
 }
 
@@ -198,9 +229,6 @@ img {
 }
 
 #nextDays div {
-    display: flex;
-    justify-content: center;
-    align-items: center;
     flex-direction: column;
     background: var(--secondaryBgColor);
     min-width: 7.5em;
@@ -225,9 +253,7 @@ section:not(#hourlyInfos) {
 }
 
 #hourlyInfosOptions {
-    display: flex;
     justify-content: space-between;
-    align-content: center;
     margin-bottom: 1em;
 }
 
@@ -242,9 +268,6 @@ section:not(#hourlyInfos) {
     width: 1em;
     color: white;
     cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
 
 #hourlyInfosDiv {
@@ -270,9 +293,6 @@ section:not(#hourlyInfos) {
 .hourDiv div {
     flex: 1;
     height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
 
 #hourlyInfos img {

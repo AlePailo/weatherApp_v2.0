@@ -65,7 +65,7 @@ function handleSearch(cityFullName, cityId) {
     deleteSearchInputText()
     $.ajax({
         url: "weather_api.php",
-        type: "POST",
+        method: "POST",
         data: { 
             cityId: cityId
         },
@@ -91,7 +91,7 @@ function handleSearch(cityFullName, cityId) {
             //console.log(getHourlyForecastForDay(WeatherApp.lastWeatherData, WeatherApp.currentLocalTimeStamp.slice(0,10)))
             $("#searchInput").blur() // FORSE MEGLIO PRIMA DI AJAX CALL
         },
-        error: () => alert("UH OH STINKYYY")
+        error: () => alert("AJAX error")
     })
     console.log(cityFullName)
     console.log(cityId)
@@ -182,7 +182,7 @@ function showSuggestions() {
                 $("#suggestions").append(listItem)
             })
         },
-        error: () => alert("NACC' U' CUL")
+        error: () => alert("Suggestions error")
     })
 }
 
@@ -309,7 +309,7 @@ function formatNextDays() {
     console.log(days)
     days.forEach((day, i) => {
         //console.log(day)
-        const dayPanel = $("<div/>")
+        const dayPanel = $("<div/>").addClass("flex-center")
         let date = formatDateForNextDaysDisplay(day[0])
         if(i === 0) date = "Oggi"
         if(i === 1) date = "Domani"
@@ -376,7 +376,7 @@ function getHourlyForecastForDay(weatherData, selectedDate, property) {
         //hourPanel.append(time, weatherIcon, selectedProperty).addClass("hourDiv")
 
         Array.from([time, weatherIcon, selectedProperty]).forEach(prop => {
-            const internalDiv = $("<div/>")
+            const internalDiv = $("<div/>").addClass("flex-center")
             internalDiv.append(prop)
             hourPanel.append(internalDiv)
         })
@@ -400,7 +400,7 @@ function showHistory() {
     const lastSearches = Max5ElementsUniqueQueue.loadFromLocalStorage()
     lastSearches.getHistory().forEach(city => {
         const listItem = $("<li>")
-            .text(city.name)
+            //.text(city.name)
             .attr("data-cityId", city.id)
             .click(function() {
                 $("#suggestions").empty()
@@ -409,6 +409,24 @@ function showHistory() {
                 let cityFullName = $(this).text()
                 handleSearch(cityFullName, cityId)
             })
+
+        // Creazione delle icone
+        const leftIcon = $("<span>").addClass("icon-left").html('<img src="media/svg/history.svg">')
+        const rightIcon = $("<span>").addClass("icon-right").html('<img src="media/svg/x.svg">').click(function(e) {
+            e.stopPropagation()
+            const parentLi = $(this).parent()
+            const lastSearches = Max5ElementsUniqueQueue.loadFromLocalStorage()
+            lastSearches.leaveQueue(parentLi.attr("data-cityId"))
+            lastSearches.saveToLocalStorage()
+            parentLi.remove()
+        })
+        
+        // Nome città con classe per facile selezione
+        const cityName = $("<span>").addClass("city-name").text(city.name)
+
+        // Costruzione dell'elemento <li>
+        listItem.append(leftIcon, cityName, rightIcon)
+
         $("#suggestions").append(listItem)
     })
     console.log(lastSearches)
@@ -416,16 +434,6 @@ function showHistory() {
 }
 
 function addToLastSearches(city, cityId) {
-    /*let lastSearches = JSON.parse(localStorage.getItem('lastSearches'))
-    if(!lastSearches) {
-        lastSearches = []
-    }
-    console.log(typeof lastSearches, lastSearches)
-    lastSearches.push([city])
-    localStorage.setItem('lastSearches', JSON.stringify(lastSearches))*/
-    
-    //localStorage.removeItem("lastSearches")
-
     const lastSearches = Max5ElementsUniqueQueue.loadFromLocalStorage()
     lastSearches.enqueue({id: cityId, name: city})
 }
@@ -437,10 +445,10 @@ class Max5ElementsUniqueQueue {
 
     enqueue(newItem) {
         const pos = this.items.findIndex(item => item.id === newItem.id)
-        if (pos !== -1) {
+        if(pos !== -1) {
             this.items.splice(pos, 1)
         }
-        if (this.items.length === 5) {
+        if(this.items.length === 5) {
             this.dequeue()
         }
         this.items.push(newItem);
@@ -449,6 +457,11 @@ class Max5ElementsUniqueQueue {
 
     dequeue() {
         if (!this.isEmpty()) this.items.shift()
+    }
+
+    leaveQueue(itemId) {
+        const pos = this.items.findIndex(item => item.id === itemId)
+        if(pos !== -1) this.items.splice(pos, 1)
     }
 
     size() {
