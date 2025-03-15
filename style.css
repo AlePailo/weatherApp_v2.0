@@ -24,17 +24,23 @@
 }
 
 body {
-    display: flex;
-    flex-direction: column;
-    gap: 1em;
-    padding: 2em;
+    
     width: 100%;
     height: 100svh;
     background: var(--mainBgColor);
 }
 
-.flex-center {
+.wrapper {
     display: flex;
+    flex-direction: column;
+    gap: 1em;
+    padding: 2em;
+    width: 100%;
+    height: 100%;
+}
+
+.flex-center {
+    display: flex !important;
     justify-content: center;
     align-items: center;
 }
@@ -299,3 +305,56 @@ section:not(#hourlyInfos) {
     max-width: unset;
     max-height: 100%;
 }
+
+
+
+#loadingWrapper {
+    top: 0;
+    left: 0;
+    position: fixed;
+    outline: 1px solid red;
+    display: none;
+    background: var(--mainBgColor);
+    width: 100%;
+    height: 100%;
+    z-index: 99;
+}
+
+#loadingWrapper svg {
+    width: 3.25em;
+    transform-origin: center;
+    animation: rotate4 2s linear infinite;
+}
+
+circle {
+    fill: none;
+    stroke: hsl(214, 97%, 59%);
+    stroke-width: 2;
+    stroke-dasharray: 1, 200;
+    stroke-dashoffset: 0;
+    stroke-linecap: round;
+    animation: dash4 1.5s ease-in-out infinite;
+}
+
+@keyframes rotate4 {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+   
+@keyframes dash4 {
+    0% {
+        stroke-dasharray: 1, 200;
+        stroke-dashoffset: 0;
+    }
+   
+    50% {
+        stroke-dasharray: 90, 200;
+        stroke-dashoffset: -35px;
+    }
+   
+    100% {
+        stroke-dashoffset: -125px;
+    }
+}
+  

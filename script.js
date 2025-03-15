@@ -1,3 +1,6 @@
+import Max5ElementsUniqueQueue from './historyUniqueQueue.js'
+import lastSearchData from './lastSearchData.js'
+
 $(document).ready(function() {
     $("#searchBtn").on("click", bindFirstSuggestion)
     $("#searchInput").on("keyup", detectEnter)
@@ -26,12 +29,6 @@ $(document).ready(function() {
         }
     })
 })
-
-const WeatherApp = {
-    localTimeZone: null,
-    lastWeatherData: null,
-    currentLocalTimeStamp: null
-}
 
 function deleteSearchInputText() {
     $("#searchInput").val("")
@@ -66,32 +63,38 @@ function handleSearch(cityFullName, cityId) {
     $.ajax({
         url: "weather_api.php",
         method: "POST",
-        data: { 
+        data: {
             cityId: cityId
         },
+        beforeSend: toggleLoadingVisibility,
         success: function(response) {
             console.log(response)
             addToLastSearches(cityFullName, cityId)
             $("main").show()
             $("#placeInfos").text(cityFullName)
-            WeatherApp.localTimeZone = response.localTimeZone
-            WeatherApp.lastWeatherData = response.weather
-            formatISODateTimesToLocal(WeatherApp.lastWeatherData.timelines)
-            WeatherApp.currentLocalTimeStamp = convertISOToLocalTime(new Date().toISOString(), WeatherApp.localTimeZone)
-            $("#currentLocalTime").text(WeatherApp.currentLocalTimeStamp.slice(12,17))
-            $("#currentLocalDate").text(WeatherApp.currentLocalTimeStamp.slice(0,10))
-            let currentWeather = WeatherApp.lastWeatherData.timelines.hourly[0].values
+            const updateObj = {
+                localTimeZone : response.localTimeZone,
+                weather : response.weather, 
+                currentTime : convertISOToLocalTime(new Date().toISOString(), response.localTimeZone)
+            }
+            lastSearchData.update(updateObj)
+            formatISODateTimesToLocal(lastSearchData.lastWeatherData.timelines)
+            console.log(lastSearchData)
+            $("#currentLocalTime").text(lastSearchData.currentLocalTimeStamp.slice(12,17))
+            $("#currentLocalDate").text(lastSearchData.currentLocalTimeStamp.slice(0,10))
+            let currentWeather = lastSearchData.lastWeatherData.timelines.hourly[0].values
             $("#currentTemperature").text(Math.round(currentWeather.temperature) + "°C")
             $("#currentWindSpeed").text(currentWeather.windSpeed + "KM/H")
             $("#currentHumidity").text(currentWeather.humidity + "%")
             $("#currentRainProb").text(currentWeather.precipitationProbability + "%")
-            $("#currentWeatherImg").attr("src", getCurrentWeatherFromCode(currentWeather.weatherCode, WeatherApp.currentLocalTimeStamp.slice(12,17)))
+            $("#currentWeatherImg").attr("src", getCurrentWeatherFromCode(currentWeather.weatherCode, lastSearchData.currentLocalTimeStamp.slice(12,17)))
 
             formatNextDays()
-            //console.log(getHourlyForecastForDay(WeatherApp.lastWeatherData, WeatherApp.currentLocalTimeStamp.slice(0,10)))
+            //console.log(getHourlyForecastForDay(lastSearchData.lastWeatherData, lastSearchData.currentLocalTimeStamp.slice(0,10)))
             $("#searchInput").blur() // FORSE MEGLIO PRIMA DI AJAX CALL
         },
-        error: () => alert("AJAX error")
+        error: () => alert("AJAX error"),
+        complete: toggleLoadingVisibility
     })
     console.log(cityFullName)
     console.log(cityId)
@@ -106,57 +109,6 @@ function showSuggestions() {
         showHistory()
         return
     }
-
-    /*$.ajax({
-        url: `https://photon.komoot.io/api/?q=${input}&limit=5&osm_tag=place:city&osm_tag=place:town&osm_tag=place:village`,
-        method: "GET",
-        success: function(data) {
-            let cities = [];
-            $("#suggestions").empty()
-
-            data.features.forEach(place => {
-                let type = place.properties.osm_value
-                let city = place.properties["name:it"] || place.properties.name
-                let region = place.properties.state
-                let country = place.properties.country
-                
-                let lat = place.geometry.coordinates[1];
-                let lon = place.geometry.coordinates[0];
-
-                if (["city", "town", "village"].includes(type)) {
-                    // Evita duplicati
-                    if (!cities.some(c => c.city === city && c.region === region && c.country === country)) {
-                        cities.push({city, region, country, lat, lon})// lat, lon });
-                    }
-                }
-            })
-
-            //console.log(cities)
-
-            cities.forEach(city => {
-                //console.log(`${city.city}, ${city.region}, ${city.country}`)
-                let text = city.region ? `${city.city}, ${city.region}, ${city.country}` : `${city.city}, ${city.country}`;
-
-                const listItem = $("<li>")
-                    .text(text)
-                    .attr("data-lat", city.lat)
-                    .attr("data-lon", city.lon)
-                    .click(function() {
-                        //$("#searchInput").val(text)
-                        $("#suggestions").empty()
-
-                        let lat = $(this).attr("data-lat")
-                        let lon = $(this).attr("data-lon")
-                        let cityInfos = $(this).text()
-                        //console.log(`Selezionata: ${lat}, ${lon}`)
-                        handleSearch(cityInfos, lat, lon)
-                    })
-                $("#suggestions").append(listItem)
-                $("#suggestions").show()
-            })
-            //console.log("-------")
-        }
-    })*/
 
     $.ajax({
         url: "weather_api.php",
@@ -266,11 +218,11 @@ function getCurrentWeatherFromCode(code, time = "07:00") {
 
 function formatISODateTimesToLocal(arr) {
     arr.hourly.forEach(hour => {
-        hour.time = convertISOToLocalTime(hour.time, WeatherApp.localTimeZone)
+        hour.time = convertISOToLocalTime(hour.time, lastSearchData.localTimeZone)
     })
 
     arr.daily.forEach(day => {
-        day.time = convertISOToLocalTime(day.time, WeatherApp.localTimeZone).slice(0,10)
+        day.time = convertISOToLocalTime(day.time, lastSearchData.localTimeZone).slice(0,10)
     })
 }
 
@@ -278,9 +230,9 @@ function formatISODateTimesToLocal(arr) {
 
 function getNextDays(currentDay, coveredDays) {
     const next5Days = []
-    //const currentDay = WeatherApp.currentLocalTimeStamp.slice(0,10)
+    //const currentDay = lastSearchData.currentLocalTimeStamp.slice(0,10)
     console.log(currentDay)
-    //const days = WeatherApp.lastWeatherData.timelines.daily
+    //const days = lastSearchData.lastWeatherData.timelines.daily
     let count = 0
     let i = 0
     let found = false
@@ -305,7 +257,7 @@ function getNextDays(currentDay, coveredDays) {
 
 function formatNextDays() {
     $("#nextDays").empty()
-    const days = getNextDays(WeatherApp.currentLocalTimeStamp.slice(0,10), WeatherApp.lastWeatherData.timelines.daily)
+    const days = getNextDays(lastSearchData.currentLocalTimeStamp.slice(0,10), lastSearchData.lastWeatherData.timelines.daily)
     console.log(days)
     days.forEach((day, i) => {
         //console.log(day)
@@ -333,10 +285,11 @@ function formatDateForNextDaysDisplay(dateStr) {
 
 function showHourlyForecastForDay(selectedDate) {
     //const selectedDate = $(this).attr("data-date")
+    $("select").val("temperature")
     $("#searchDiv").hide()
     $("main").hide()
     $("#hourlyInfos").attr("data-selectedDate", selectedDate).show()
-    getHourlyForecastForDay(WeatherApp.lastWeatherData, selectedDate, $("select").val())
+    getHourlyForecastForDay(lastSearchData.lastWeatherData, selectedDate, $("select").val())
 }
 
 function getHourlyForecastForDay(weatherData, selectedDate, property) {
@@ -367,13 +320,6 @@ function getHourlyForecastForDay(weatherData, selectedDate, property) {
         }
 
         const selectedProperty = $("<p/>").text(`${propertyVal} ${suffix}`)
-        /*
-        const temp = $("<p/>").text(hour.values.temperature + "°C")
-        const windSpeed = $("<p/>").text(hour.values.windSpeed + "KM/H")
-        const humidity = $("<p/>").text(hour.values.humidity + "%")
-        const rainProb = $("<p/>").text(hour.values.precipitationProbability + "%")
-        hourPanel.append(time, temp, windSpeed, humidity, rainProb)*/
-        //hourPanel.append(time, weatherIcon, selectedProperty).addClass("hourDiv")
 
         Array.from([time, weatherIcon, selectedProperty]).forEach(prop => {
             const internalDiv = $("<div/>").addClass("flex-center")
@@ -392,7 +338,7 @@ function hideHourlyForecastForDay() {
 
 function changeHourlyProperty() {
     //console.log($(this).val())
-    getHourlyForecastForDay(WeatherApp.lastWeatherData, $("#hourlyInfos").attr("data-selectedDate"), $("select").val())
+    getHourlyForecastForDay(lastSearchData.lastWeatherData, $("#hourlyInfos").attr("data-selectedDate"), $("select").val())
 }
 
 
@@ -438,52 +384,6 @@ function addToLastSearches(city, cityId) {
     lastSearches.enqueue({id: cityId, name: city})
 }
 
-class Max5ElementsUniqueQueue {
-    constructor() {
-        this.items = []
-    }
-
-    enqueue(newItem) {
-        const pos = this.items.findIndex(item => item.id === newItem.id)
-        if(pos !== -1) {
-            this.items.splice(pos, 1)
-        }
-        if(this.items.length === 5) {
-            this.dequeue()
-        }
-        this.items.push(newItem);
-        this.saveToLocalStorage()
-    }
-
-    dequeue() {
-        if (!this.isEmpty()) this.items.shift()
-    }
-
-    leaveQueue(itemId) {
-        const pos = this.items.findIndex(item => item.id === itemId)
-        if(pos !== -1) this.items.splice(pos, 1)
-    }
-
-    size() {
-        return this.items.length
-    }
-
-    isEmpty() {
-        return this.items.length === 0
-    }
-
-    getHistory() {
-        return [...this.items].reverse()
-    }
-
-    saveToLocalStorage() {
-        localStorage.setItem("lastSearches", JSON.stringify(this.items))
-    }
-
-    static loadFromLocalStorage() {
-        const data = JSON.parse(localStorage.getItem("lastSearches")) || []
-        const instance = new Max5ElementsUniqueQueue()
-        instance.items = data
-        return instance
-    }
+function toggleLoadingVisibility() {
+    $("#loadingWrapper").toggleClass("flex-center")
 }

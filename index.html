@@ -8,69 +8,76 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
-    <div id="searchDiv">
-        <div class="flex-center" id="searchDivInputs">
-            <input id="searchInput" type="text">
-            <button class="flex-center" id="searchBtn"><svg viewBox="0 0 512 512" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 512 512"><path d="M344.5 298c15-23.6 23.8-51.6 23.8-81.7 0-84.1-68.1-152.3-152.1-152.3C132.1 64 64 132.2 64 216.3c0 84.1 68.1 152.3 152.1 152.3 30.5 0 58.9-9 82.7-24.4l6.9-4.8L414.3 448l33.7-34.3-108.5-108.6 5-7.1zm-43.1-166.8c22.7 22.7 35.2 52.9 35.2 85s-12.5 62.3-35.2 85c-22.7 22.7-52.9 35.2-85 35.2s-62.3-12.5-85-35.2c-22.7-22.7-35.2-52.9-35.2-85s12.5-62.3 35.2-85c22.7-22.7 52.9-35.2 85-35.2s62.3 12.5 85 35.2z" fill="#ffffff" class="fill-000000"></path></svg></button>
-            <svg id="searchInputX" class="feather feather-x" fill="#ffffff" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+    <div class="wrapper">
+        <div id="searchDiv">
+            <div class="flex-center" id="searchDivInputs">
+                <input id="searchInput" type="text">
+                <button class="flex-center" id="searchBtn"><svg viewBox="0 0 512 512" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 512 512"><path d="M344.5 298c15-23.6 23.8-51.6 23.8-81.7 0-84.1-68.1-152.3-152.1-152.3C132.1 64 64 132.2 64 216.3c0 84.1 68.1 152.3 152.1 152.3 30.5 0 58.9-9 82.7-24.4l6.9-4.8L414.3 448l33.7-34.3-108.5-108.6 5-7.1zm-43.1-166.8c22.7 22.7 35.2 52.9 35.2 85s-12.5 62.3-35.2 85c-22.7 22.7-52.9 35.2-85 35.2s-62.3-12.5-85-35.2c-22.7-22.7-35.2-52.9-35.2-85s12.5-62.3 35.2-85c22.7-22.7 52.9-35.2 85-35.2s62.3 12.5 85 35.2z" fill="#ffffff" class="fill-000000"></path></svg></button>
+                <svg id="searchInputX" class="feather feather-x" fill="#ffffff" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+            </div>
+            <ul id="suggestions">
+            </ul>
         </div>
-        <ul id="suggestions">
-        </ul>
-    </div>
-    <main>
-        <section id="mainSection">
-            <article class="flex-center" id="placeAndDateTime">
-                <div>
-                    <p id="placeInfos"></p>
-                    <p id="currentLocalDate"></p>  
-                </div>
-                <div>
-                    <p id="currentLocalTime"></p>
-                </div>
+        <main>
+            <section id="mainSection">
+                <article class="flex-center" id="placeAndDateTime">
+                    <div>
+                        <p id="placeInfos"></p>
+                        <p id="currentLocalDate"></p>  
+                    </div>
+                    <div>
+                        <p id="currentLocalTime"></p>
+                    </div>
+                </article>
+                <article id="currentWeatherInfos">
+                    <div class="flex-center" id="mainCurrentWeatherInfos">
+                        <p class="flex-center" id="currentTemperature"></p>
+                        <img id="currentWeatherImg" src="media/svg/clear_night.svg" alt="Current weather icon">
+                    </div>
+                    <div class="flex-center" id="secondaryCurrentWeatherInfos">
+                        <div class="flex-center">
+                            <img src="media/svg/wind_speed.svg" alt="Wind speed icon"></p>
+                            <p id="currentWindSpeed">2 KM/H</p>
+                            <p class="currentWeatherLabels">Wind speed</p>
+                        </div>
+                        <div class="flex-center">
+                            <img src="media/svg/humidity.svg" alt="Humidity icon"></p>
+                            <p id="currentHumidity">20%</p>
+                            <p>Humidity</p>
+                        </div>
+                        <div class="flex-center">
+                            <img src="media/svg/rain_prob.svg" alt="Rain probability icon"></p>
+                            <p id="currentRainProb">50%</p>
+                            <p>Rain probability</p>
+                        </div>
+                    </div>
+                </article>
+            <section>
+                <p id="nextDaysTitle">Info dettagliate</p>
+                <article id="nextDays">
+                </article>
+            </section>
+        </main>
+        <section id="hourlyInfos">
+            <article class="flex-center" id="hourlyInfosOptions">
+                <p class="flex-center" id="backBtn"><img src="media/svg/back_btn.svg" alt="Back button icon"></p>
+                <select>
+                    <option value="temperature">Temperatura</option>
+                    <option value="windSpeed">Vento</option>
+                    <option value="humidity">Umidità</option>
+                    <option value="precipitationProbability">Precipitazioni</option>
+                </select>
             </article>
-            <article id="currentWeatherInfos">
-                <div class="flex-center" id="mainCurrentWeatherInfos">
-                    <p class="flex-center" id="currentTemperature"></p>
-                    <img id="currentWeatherImg" src="media/svg/clear_night.svg" alt="">
-                </div>
-                <div class="flex-center" id="secondaryCurrentWeatherInfos">
-                    <div class="flex-center">
-                        <img src="media/svg/wind_speed.svg" alt=""></p>
-                        <p id="currentWindSpeed">2 KM/H</p>
-                        <p class="currentWeatherLabels">Wind speed</p>
-                    </div>
-                    <div class="flex-center">
-                        <img src="media/svg/humidity.svg" alt=""></p>
-                        <p id="currentHumidity">20%</p>
-                        <p>Humidity</p>
-                    </div>
-                    <div class="flex-center">
-                        <img src="media/svg/rain_prob.svg" alt=""></p>
-                        <p id="currentRainProb">50%</p>
-                        <p>Rain probability</p>
-                    </div>
-                </div>
-            </article>
-        <section>
-            <p id="nextDaysTitle">Info dettagliate</p>
-            <article id="nextDays">
+            <article id="hourlyInfosDiv">
             </article>
         </section>
-    </main>
-    <section id="hourlyInfos">
-        <article class="flex-center" id="hourlyInfosOptions">
-            <!--<div id="backBtn">back</div>-->
-            <p class="flex-center" id="backBtn"><img src="media/svg/back_btn.svg" alt=""></p>
-            <select>
-                <option value="temperature">Temperatura</option>
-                <option value="windSpeed">Vento</option>
-                <option value="humidity">Umidità</option>
-                <option value="precipitationProbability">Precipitazioni</option>
-            </select>
-        </article>
-        <article id="hourlyInfosDiv">
-        </article>
-    </section>
-    <script src="script.js"></script>
+    </div>
+    
+    <div id="loadingWrapper">
+        <svg viewBox="25 25 50 50">
+            <circle r="20" cy="50" cx="50"></circle>
+        </svg>
+    </div>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
