@@ -2,11 +2,11 @@ import Max5ElementsUniqueQueue from './historyUniqueQueue.js'
 import lastSearchData from './lastSearchData.js'
 
 $(document).ready(function() {
-    $("#searchBtn").on("click", bindFirstSuggestion)
+    $("#searchBtn").on("click", searchFirstSuggestion)
     $("#searchInput").on("keyup", detectEnter)
     $("#searchInput").on("input focus", showSuggestions)
-    $("#searchInput").on("input focus focusout", changeXStatus)
-    $("body").on("click", "#searchInputX", deleteSearchInputText)
+    $("#searchInput").on("input focus focusout", setSearchInputXVisibility)
+    $("body").on("click", "#searchInputX", clearSearchInput)
     $("body").on("click", "#nextDays div", function() {
         $(this).css("transform", "scale(0.9)")
         setTimeout(() => {
@@ -30,12 +30,12 @@ $(document).ready(function() {
     })
 })
 
-function deleteSearchInputText() {
+function clearSearchInput() {
     $("#searchInput").val("")
     $("#searchInputX").hide()
 }
 
-function changeXStatus() {
+function setSearchInputXVisibility() {
     let input = $(this)
     if(input.val().length) {
         $("#searchInputX").show()
@@ -51,7 +51,7 @@ function detectEnter(e) {
     }
 }
 
-function bindFirstSuggestion() {
+function searchFirstSuggestion() {
     let firstSuggestion = $("#suggestions").find("li:first")
     let cityFullName = firstSuggestion.text()
     let cityId = firstSuggestion.attr("data-cityId")
@@ -59,83 +59,77 @@ function bindFirstSuggestion() {
 }
 
 function handleSearch(cityFullName, cityId) {
-    deleteSearchInputText()
-    $.ajax({
-        url: "weather_api.php",
-        method: "POST",
-        data: {
-            cityId: cityId
-        },
-        beforeSend: toggleLoadingVisibility,
-        success: function(response) {
-            console.log(response)
-            addToLastSearches(cityFullName, cityId)
-            $("main").show()
-            $("#placeInfos").text(cityFullName)
-            const updateObj = {
-                localTimeZone : response.localTimeZone,
-                weather : response.weather, 
-                currentTime : convertISOToLocalTime(new Date().toISOString(), response.localTimeZone)
-            }
-            lastSearchData.update(updateObj)
-            formatISODateTimesToLocal(lastSearchData.lastWeatherData.timelines)
-            console.log(lastSearchData)
-            $("#currentLocalTime").text(lastSearchData.currentLocalTimeStamp.slice(12,17))
-            $("#currentLocalDate").text(lastSearchData.currentLocalTimeStamp.slice(0,10))
-            let currentWeather = lastSearchData.lastWeatherData.timelines.hourly[0].values
-            $("#currentTemperature").text(Math.round(currentWeather.temperature) + "°C")
-            $("#currentWindSpeed").text(currentWeather.windSpeed + "KM/H")
-            $("#currentHumidity").text(currentWeather.humidity + "%")
-            $("#currentRainProb").text(currentWeather.precipitationProbability + "%")
-            $("#currentWeatherImg").attr("src", getCurrentWeatherFromCode(currentWeather.weatherCode, lastSearchData.currentLocalTimeStamp.slice(12,17)))
+    setTimeout(() => {
+        clearSearchInput()
+        $("#searchInput").blur()
 
-            formatNextDays()
-            //console.log(getHourlyForecastForDay(lastSearchData.lastWeatherData, lastSearchData.currentLocalTimeStamp.slice(0,10)))
-            $("#searchInput").blur() // FORSE MEGLIO PRIMA DI AJAX CALL
-        },
-        error: () => alert("AJAX error"),
-        complete: toggleLoadingVisibility
-    })
-    console.log(cityFullName)
-    console.log(cityId)
+        $.ajax({
+            url: "weather_api.php",
+            method: "POST",
+            data: {
+                cityId: cityId
+            },
+            beforeSend: toggleLoadingVisibility,
+            success: function(response) {
+                console.log(response)
+                addToLastSearches(cityFullName, cityId)
+                $("main").show()
+                $("#placeInfos").text(cityFullName)
+                const updateObj = {
+                    localTimeZone : response.localTimeZone,
+                    weather : response.weather, 
+                    currentTime : convertISOToLocalTime(new Date().toISOString(), response.localTimeZone)
+                }
+                lastSearchData.update(updateObj)
+                formatISODateTimesToLocal(lastSearchData.lastWeatherData.timelines)
+                console.log(lastSearchData)
+                $("#currentLocalTime").text(lastSearchData.currentLocalTimeStamp.slice(12,17))
+                $("#currentLocalDate").text(lastSearchData.currentLocalTimeStamp.slice(0,10))
+                let currentWeather = lastSearchData.lastWeatherData.timelines.hourly[0].values
+                $("#currentTemperature").text(Math.round(currentWeather.temperature) + "°C")
+                $("#currentWindSpeed").text(currentWeather.windSpeed + "KM/H")
+                $("#currentHumidity").text(currentWeather.humidity + "%")
+                $("#currentRainProb").text(currentWeather.precipitationProbability + "%")
+                $("#currentWeatherImg").attr("src", getCurrentWeatherFromCode(currentWeather.weatherCode, lastSearchData.currentLocalTimeStamp.slice(12,17)))
+
+                formatNextDays()
+                //console.log(getHourlyForecastForDay(lastSearchData.lastWeatherData, lastSearchData.currentLocalTimeStamp.slice(0,10)))
+            },
+            error: () => alert("AJAX error"),
+            complete: toggleLoadingVisibility
+        })
+    }, 250)
 }
 
 function showSuggestions() {
-    const input = $("#searchInput").val().trim()
-    $("#suggestions").show()
+    setTimeout(() => {
+        const input = $("#searchInput").val().trim()
+        $("#suggestions").show()
+        console.log(input.length)
 
-    if(input.length < 1) {
-        $("#suggestions").empty()
-        showHistory()
-        return
-    }
-
-    $.ajax({
-        url: "weather_api.php",
-        method: "POST",
-        data: {
-            userInput : input
-        },
-        success: function(response) {
+        if(input.length < 1) {
             $("#suggestions").empty()
+            showHistory()
+            return
+        }
 
-            response.items.forEach(place => {
-                const listItem = $("<li>")
-                    .text(place.address.label)
-                    .attr("data-cityId", place.id)
-                    .click(function() {
-                        //$("#searchInput").val(text)
-                        $("#suggestions").empty()
-
-                        let cityId = $(this).attr("data-cityId")
-                        let cityFullName = $(this).text()
-                        handleSearch(cityFullName, cityId)
-                    })
-                $("#suggestions").append(listItem)
-            })
-        },
-        error: () => alert("Suggestions error")
-    })
+        $.ajax({
+            url: "weather_api.php",
+            method: "POST",
+            data: {
+                userInput : input
+            },
+            success: function(response) {
+                $("#suggestions").empty()
+            
+                response.items.forEach(city => {
+                    const listItem = createSuggestionLi(city.id, city.address.label, '<img src="media/svg/search.svg">')
+                    $("#suggestions").append(listItem)
+                })
+            },
+            error: () => alert("Suggestions error")
+        })
+    }, 250)
 }
 
 function convertISOToLocalTime(isoTimestamp, timeZone) {
@@ -345,38 +339,9 @@ function changeHourlyProperty() {
 function showHistory() {
     const lastSearches = Max5ElementsUniqueQueue.loadFromLocalStorage()
     lastSearches.getHistory().forEach(city => {
-        const listItem = $("<li>")
-            //.text(city.name)
-            .attr("data-cityId", city.id)
-            .click(function() {
-                $("#suggestions").empty()
-
-                let cityId = $(this).attr("data-cityId")
-                let cityFullName = $(this).text()
-                handleSearch(cityFullName, cityId)
-            })
-
-        // Creazione delle icone
-        const leftIcon = $("<span>").addClass("icon-left").html('<img src="media/svg/history.svg">')
-        const rightIcon = $("<span>").addClass("icon-right").html('<img src="media/svg/x.svg">').click(function(e) {
-            e.stopPropagation()
-            const parentLi = $(this).parent()
-            const lastSearches = Max5ElementsUniqueQueue.loadFromLocalStorage()
-            lastSearches.leaveQueue(parentLi.attr("data-cityId"))
-            lastSearches.saveToLocalStorage()
-            parentLi.remove()
-        })
-        
-        // Nome città con classe per facile selezione
-        const cityName = $("<span>").addClass("city-name").text(city.name)
-
-        // Costruzione dell'elemento <li>
-        listItem.append(leftIcon, cityName, rightIcon)
-
+        const listItem = createSuggestionLi(city.id, city.name, '<img src="media/svg/history.svg">', '<img src="media/svg/x.svg">')
         $("#suggestions").append(listItem)
     })
-    console.log(lastSearches)
-    //lastSearches.items.reverse().forEach(city => console.log(city))
 }
 
 function addToLastSearches(city, cityId) {
@@ -386,4 +351,37 @@ function addToLastSearches(city, cityId) {
 
 function toggleLoadingVisibility() {
     $("#loadingWrapper").toggleClass("flex-center")
+}
+
+
+
+
+
+function createSuggestionLi(cityId, cityFullName, leftIconHtml, rightIconHtml = "") {
+    const listItem = $("<li>")
+        .attr("data-cityId", cityId)
+        .click(function() {
+            $("#suggestions").empty()
+            let cityId = $(this).attr("data-cityId")
+            let cityFullName = $(this).text()
+            handleSearch(cityFullName, cityId)
+        })
+
+    const leftIcon = $("<span>").addClass("icon-left").html(leftIconHtml)
+    const cityName = $("<span>").addClass("city-name").text(cityFullName)
+    listItem.append(leftIcon, cityName)
+
+    if(rightIconHtml) {
+        const rightIcon = $("<span>").addClass("icon-right").html(rightIconHtml).click(function(e) {
+            e.stopPropagation()
+            const parentLi = $(this).parent()
+            const lastSearches = Max5ElementsUniqueQueue.loadFromLocalStorage()
+            lastSearches.leaveQueue(parentLi.attr("data-cityId"))
+            lastSearches.saveToLocalStorage()
+            parentLi.remove()
+        })
+        listItem.append(rightIcon)
+    }
+
+    return listItem
 }
